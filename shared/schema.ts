@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name", { length: 60 }).notNull(),
+  name: varchar("name", { length: 30 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: varchar("role", { length: 20 }).notNull().default("user"), // 'admin', 'user', 'store_owner'
@@ -15,7 +15,7 @@ export const users = pgTable("users", {
 
 export const stores = pgTable("stores", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name", { length: 60 }).notNull(),
+  name: varchar("name", { length: 30 }).notNull(),
   address: text("address").notNull(),
   ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -59,7 +59,7 @@ export const ratingsRelations = relations(ratings, ({ one }) => ({
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
-  name: z.string().min(20, "Name must be at least 20 characters").max(60, "Name must be at most 60 characters"),
+  name: z.string().min(2, "Name must be at least 2 characters").max(30, "Name must be at most 30 characters"),
   email: z.string().email("Invalid email format"),
   passwordHash: z.string(),
   address: z.string().max(400, "Address must be at most 400 characters"),
@@ -70,7 +70,7 @@ export const insertUserSchema = createInsertSchema(users, {
 });
 
 export const insertStoreSchema = createInsertSchema(stores, {
-  name: z.string().min(20, "Store name must be at least 20 characters").max(60, "Store name must be at most 60 characters"),
+  name: z.string().min(2, "Store name must be at least 2 characters").max(30, "Store name must be at most 30 characters"),
   address: z.string().max(400, "Address must be at most 400 characters"),
 }).omit({
   id: true,
@@ -99,7 +99,7 @@ export const loginSchema = z.object({
 
 // Signup schema (for frontend form validation)
 export const signupSchema = z.object({
-  name: z.string().min(20, "Name must be at least 20 characters").max(60, "Name must be at most 60 characters"),
+  name: z.string().min(2, "Name must be at least 2 characters").max(30, "Name must be at most 30 characters"),
   email: z.string().email("Invalid email format"),
   password: passwordSchema,
   address: z.string().max(400, "Address must be at most 400 characters"),
