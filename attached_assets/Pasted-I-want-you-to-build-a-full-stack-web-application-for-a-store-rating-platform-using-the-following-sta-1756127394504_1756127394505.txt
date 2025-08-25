@@ -1,0 +1,188 @@
+I want you to build a full-stack web application for a store rating platform using the following stack only:
+
+Frontend: ReactJS (responsive & professional UI/UX, modern design, styled components or Tailwind/Bootstrap)
+
+Backend: ExpressJS (JavaScript only, no TypeScript)
+
+Database: MySQL
+
+Follow these requirements strictly:
+
+🔹 Requirements & Features
+1. User Roles
+System Administrator
+
+Normal User
+
+Store Owner
+
+2. Authentication & Security
+Implement a single login system for all users with role-based access control (JWT Authentication).
+
+Users (Normal & Store Owner) can sign up and log in.
+
+Admins are created either directly in the DB or through admin dashboard.
+
+Passwords must be hashed (bcrypt).
+
+3. Functionalities Per Role
+🛠 System Administrator
+
+Add new stores, normal users, and admin users.
+
+Dashboard showing:
+
+Total number of users
+
+Total number of stores
+
+Total number of submitted ratings
+
+Add new users (Name, Email, Password, Address).
+
+View list of stores with: Name, Email, Address, Rating.
+
+View list of all users with: Name, Email, Address, Role.
+
+Filtering & sorting on Name, Email, Address, Role.
+
+View all user details (if user = Store Owner → also include their store rating).
+
+Logout button.
+
+👤 Normal User
+
+Sign up and log in.
+
+Manage profile & update password.
+
+View all registered stores with:
+
+Store Name
+
+Address
+
+Overall Rating
+
+User’s Submitted Rating
+
+Button to submit rating (1–5 stars)
+
+Button to edit rating
+
+Search stores by name & address.
+
+Logout button.
+
+🏪 Store Owner
+
+Login.
+
+Update password.
+
+Dashboard:
+
+List of users who submitted ratings for their store.
+
+Average store rating.
+
+Logout button.
+
+🔹 Form Validations
+Name: Min 20 chars, Max 60 chars.
+
+Address: Max 400 chars.
+
+Password: 8-16 chars, at least 1 uppercase + 1 special char.
+
+Email: Must follow standard email format.
+
+🔹 Database Schema (MySQL)
+Design normalized tables with relationships:
+
+Users Table: (id, name, email, password_hash, role, address, created_at)
+
+Stores Table: (id, name, address, owner_id, created_at)
+
+Ratings Table: (id, user_id, store_id, rating_value, created_at)
+
+Relationships:
+
+One Store → Many Ratings
+
+One User → Many Ratings
+
+One User(Role=Store Owner) → One Store
+
+🔹 Backend (ExpressJS)
+ExpressJS server with RESTful APIs.
+
+Routes:
+
+/auth/signup, /auth/login, /auth/update-password
+
+/admin/* for admin actions
+
+/stores/* (CRUD, ratings, search)
+
+/ratings/* (add, update)
+
+Middleware:
+
+JWT authentication
+
+Role-based authorization (Admin/StoreOwner/User).
+
+Use Sequelize ORM or raw MySQL queries.
+
+Proper error handling & validation middleware.
+
+🔹 Frontend (ReactJS)
+Fully responsive UI (Mobile, Tablet, Desktop).
+
+Routing with React Router.
+
+Pages:
+
+Login / Signup
+
+Admin Dashboard (stats, users, stores, ratings)
+
+User Dashboard (store list, rate stores, update profile)
+
+Owner Dashboard (see ratings for own store)
+
+Components should include:
+
+Navbar (role-based menu items)
+
+Forms with validation messages
+
+Store Listings with rating submission/edit buttons
+
+Tables with sorting, filtering & search
+
+Styling: Professional & modern design (choose Bootstrap / Material UI / Tailwind CSS).
+
+🔹 Additional Best Practices
+Use dotenv for env configs.
+
+Password hashing with bcrypt.
+
+Token authentication with JWT.
+
+Input validation using express-validator.
+
+Proper API error handling with status codes.
+
+✅ Expected Deliverables
+Fully working ExpressJS backend connected to MySQL database.
+
+Fully responsive ReactJS frontend with all required pages & role-based dashboards.
+
+All routes & buttons functional (CRUD operations + ratings).
+
+Clean, maintainable, production-ready code.
+
+👉 Now generate the complete code for both backend and frontend step by step, ensuring the project is fully functional and responsive. Provide the folder structure, complete code for every file, and clear setup instructions (npm install, database migrations, starting backend & frontend servers). Do not use TypeScript. Use only Express JS + ReactJS + MySQL.
+
