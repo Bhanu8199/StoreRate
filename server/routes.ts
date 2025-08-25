@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, hashPassword, comparePassword, type AuthenticatedRequest } from "./middleware/auth";
 import { 
   insertUserSchema, insertStoreSchema, insertRatingSchema, 
-  loginSchema, passwordSchema, updatePasswordSchema 
+  loginSchema, signupSchema, passwordSchema, updatePasswordSchema 
 } from "@shared/schema";
 import { Request, Response } from "express";
 
@@ -13,11 +13,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/signup', async (req: Request, res: Response) => {
     try {
-      const validatedData = insertUserSchema.parse(req.body);
-      
-      // Validate password separately for better error messages
-      const password = req.body.password;
-      passwordSchema.parse(password);
+      console.log('Signup request body:', req.body);
+      // Validate the entire signup request
+      const validatedData = signupSchema.parse(req.body);
+      console.log('Validated data:', validatedData);
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(validatedData.email);
@@ -26,11 +25,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password
-      const passwordHash = await hashPassword(password);
+      const passwordHash = await hashPassword(validatedData.password);
 
-      // Create user
+      // Create user (exclude password and storeName from validatedData)
+      const { password: _, storeName, ...userData } = validatedData;
       const user = await storage.createUser({
-        ...validatedData,
+        ...userData,
         passwordHash,
       });
 
@@ -61,13 +61,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
     } catch (error: any) {
+      console.error('Signup error:', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({
           message: 'Validation error',
           errors: error.errors,
         });
       }
-      res.status(500).json({ message: 'Internal server error' });
+      res.status(500).json({ message: 'Internal server error', error: error.message });
     }
   });
 
@@ -217,7 +218,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/users', authenticateToken, requireRole(['admin']), async (req: Request, res: Response) => {
     try {
-      const validatedData = insertUserSchema.parse(req.body);
+      const userData = {
+        name: req.body.name,
+        email: req.body.email,
+        address: req.body.address,
+        role: req.body.role || 'user'
+      };
+      const validatedData = insertUserSchema.omit({ passwordHash: true }).parse(userData);
       const password = req.body.password;
       passwordSchema.parse(password);
 

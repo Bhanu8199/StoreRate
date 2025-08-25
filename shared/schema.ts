@@ -84,18 +84,28 @@ export const insertRatingSchema = createInsertSchema(ratings, {
   createdAt: true,
 });
 
-// Login schema
-export const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(8, "Password must be at least 8 characters").max(16, "Password must be at most 16 characters"),
-});
-
 // Password validation schema
 export const passwordSchema = z.string()
   .min(8, "Password must be at least 8 characters")
   .max(16, "Password must be at most 16 characters")
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
   .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character");
+
+// Login schema
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters").max(16, "Password must be at most 16 characters"),
+});
+
+// Signup schema (for frontend form validation)
+export const signupSchema = z.object({
+  name: z.string().min(20, "Name must be at least 20 characters").max(60, "Name must be at most 60 characters"),
+  email: z.string().email("Invalid email format"),
+  password: passwordSchema,
+  address: z.string().max(400, "Address must be at most 400 characters"),
+  role: z.enum(["admin", "user", "store_owner"]).default("user"),
+  storeName: z.string().optional(),
+});
 
 // Update password schema
 export const updatePasswordSchema = z.object({
@@ -111,6 +121,7 @@ export type Store = typeof stores.$inferSelect;
 export type InsertRating = z.infer<typeof insertRatingSchema>;
 export type Rating = typeof ratings.$inferSelect;
 export type LoginData = z.infer<typeof loginSchema>;
+export type SignupData = z.infer<typeof signupSchema>;
 export type UpdatePasswordData = z.infer<typeof updatePasswordSchema>;
 
 // Extended types with relations

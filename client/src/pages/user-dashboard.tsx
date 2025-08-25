@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Star, Edit, MapPin } from "lucide-react";
+import { Search, Star, Edit, MapPin, Store } from "lucide-react";
 import RatingModal from "@/components/rating-modal";
 
 interface Store {

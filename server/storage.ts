@@ -88,7 +88,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersWithFilters(search?: string, role?: string): Promise<UserWithStore[]> {
-    let query = db
+    let baseQuery = db
       .select()
       .from(users)
       .leftJoin(stores, eq(users.id, stores.ownerId));
@@ -107,11 +107,9 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(users.role, role));
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const result = await query.orderBy(users.createdAt);
+    const result = conditions.length > 0 
+      ? await baseQuery.where(and(...conditions)).orderBy(users.createdAt)
+      : await baseQuery.orderBy(users.createdAt);
 
     return result.map(row => ({
       ...row.users,
@@ -183,7 +181,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchStores(search?: string, address?: string): Promise<StoreWithOwner[]> {
-    let query = db
+    let baseQuery = db
       .select({
         store: stores,
         owner: users,
@@ -202,13 +200,9 @@ export class DatabaseStorage implements IStorage {
       conditions.push(ilike(stores.address, `%${address}%`));
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const result = await query
-      .groupBy(stores.id, users.id)
-      .orderBy(stores.createdAt);
+    const result = conditions.length > 0 
+      ? await baseQuery.where(and(...conditions)).groupBy(stores.id, users.id).orderBy(stores.createdAt)
+      : await baseQuery.groupBy(stores.id, users.id).orderBy(stores.createdAt);
 
     return result.map(row => ({
       ...row.store,
