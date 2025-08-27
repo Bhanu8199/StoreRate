@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { authenticatedApiRequest } from "@/lib/auth";
+import { authenticatedApiRequest, getCurrentUser } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,10 +22,35 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Store, Star, Plus, Search, Trash2 } from "lucide-react";
+import { Users, Store, Star, Plus, Search, Trash2, AlertCircle, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddUserModal from "@/components/add-user-modal";
 import AddStoreModal from "@/components/add-store-modal";
+
+interface Stats {
+  totalUsers: number;
+  totalStores: number;
+  totalRatings: number;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  address: string;
+}
+
+interface StoreWithOwner {
+  id: string;
+  name: string;
+  address: string;
+  averageRating: number;
+  owner: {
+    name: string;
+    email: string;
+  };
+}
 
 export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState("");
@@ -36,41 +61,124 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Debug authentication
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    console.log("Admin Dashboard - Current User:", currentUser);
+    if (!currentUser || currentUser.role !== 'admin') {
+      console.warn("Admin dashboard accessed by non-admin or unauthenticated user");
+    }
+  }, []);
+
   // Fetch stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<Stats>({
     queryKey: ['/api/admin/stats'],
     queryFn: async () => {
-      const res = await authenticatedApiRequest('GET', '/api/admin/stats');
-      return res.json();
+      try {
+        console.log("Fetching admin stats");
+        const res = await authenticatedApiRequest('GET', '/api/admin/stats');
+        if (!res.ok) {
+          throw new Error(`Failed to fetch stats: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log("Stats data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        throw error;
+      }
     },
+    retry: 2,
+    retryDelay: 1000,
   });
 
   // Fetch users
-  const { data: users, isLoading: usersLoading } = useQuery({
+  const { data: users, isLoading: usersLoading, error: usersError } = useQuery<User[]>({
     queryKey: ['/api/admin/users', userSearch, userRoleFilter],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (userSearch) params.append('search', userSearch);
-      if (userRoleFilter) params.append('role', userRoleFilter);
-      
-      const res = await authenticatedApiRequest('GET', `/api/admin/users?${params.toString()}`);
-      return res.json();
+      try {
+        const params = new URLSearchParams();
+        if (userSearch.trim()) params.append('search', userSearch.trim());
+        if (userRoleFilter) params.append('role', userRoleFilter);
+        
+        console.log("Fetching users with params:", params.toString());
+        const res = await authenticatedApiRequest('GET', `/api/admin/users?${params.toString()}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch users: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log("Users data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        throw error;
+      }
     },
+    retry: 2,
+    retryDelay: 1000,
   });
 
   // Fetch stores
-  const { data: stores, isLoading: storesLoading } = useQuery({
+  const { data: stores, isLoading: storesLoading, error: storesError } = useQuery<StoreWithOwner[]>({
     queryKey: ['/api/admin/stores'],
     queryFn: async () => {
-      const res = await authenticatedApiRequest('GET', '/api/admin/stores');
-      return res.json();
+      try {
+        console.log("Fetching stores");
+        const res = await authenticatedApiRequest('GET', '/api/admin/stores');
+        if (!res.ok) {
+          throw new Error(`Failed to fetch stores: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log("Stores data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching stores:", error);
+        throw error;
+      }
     },
+    retry: 2,
+    retryDelay: 1000,
   });
+
+  // Handle query errors
+  useEffect(() => {
+    if (statsError) {
+      toast({
+        title: "Error",
+        description: "Failed to load statistics. Please refresh the page.",
+        variant: "destructive",
+      });
+    }
+  }, [statsError, toast]);
+
+  useEffect(() => {
+    if (usersError) {
+      toast({
+        title: "Error",
+        description: "Failed to load users. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [usersError, toast]);
+
+  useEffect(() => {
+    if (storesError) {
+      toast({
+        title: "Error",
+        description: "Failed to load stores. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [storesError, toast]);
 
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      await authenticatedApiRequest('DELETE', `/api/admin/users/${userId}`);
+      console.log("Deleting user:", userId);
+      const res = await authenticatedApiRequest('DELETE', `/api/admin/users/${userId}`);
+      if (!res.ok) {
+        throw new Error(`Failed to delete user: ${res.status}`);
+      }
     },
     onSuccess: () => {
       toast({
@@ -81,9 +189,10 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error: any) => {
+      console.error("Delete user error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to delete user",
         variant: "destructive",
       });
     },
@@ -92,7 +201,11 @@ export default function AdminDashboard() {
   // Delete store mutation
   const deleteStoreMutation = useMutation({
     mutationFn: async (storeId: string) => {
-      await authenticatedApiRequest('DELETE', `/api/admin/stores/${storeId}`);
+      console.log("Deleting store:", storeId);
+      const res = await authenticatedApiRequest('DELETE', `/api/admin/stores/${storeId}`);
+      if (!res.ok) {
+        throw new Error(`Failed to delete store: ${res.status}`);
+      }
     },
     onSuccess: () => {
       toast({
@@ -103,9 +216,10 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error: any) => {
+      console.error("Delete store error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to delete store",
         variant: "destructive",
       });
     },
@@ -147,16 +261,44 @@ export default function AdminDashboard() {
     );
   };
 
-  const filteredStores = stores?.filter((store: any) =>
+  const filteredStores = stores?.filter((store: StoreWithOwner) =>
     store.name.toLowerCase().includes(storeSearch.toLowerCase()) ||
     store.address.toLowerCase().includes(storeSearch.toLowerCase())
   ) || [];
 
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/stores'] });
+    toast({
+      title: "Refreshing",
+      description: "Updating dashboard data...",
+    });
+  };
+
+  const handleDeleteUser = (userId: string, userName: string) => {
+    if (window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
+
+  const handleDeleteStore = (storeId: string, storeName: string) => {
+    if (window.confirm(`Are you sure you want to delete store "${storeName}"? This action cannot be undone.`)) {
+      deleteStoreMutation.mutate(storeId);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8" data-testid="admin-dashboard">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-600">Manage users, stores, and monitor platform activity</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-600">Manage users, stores, and monitor platform activity</p>
+        </div>
+        <Button onClick={handleRefresh} variant="outline" size="sm">
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Overview */}
@@ -169,8 +311,11 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <div className="text-sm font-medium text-gray-500">Total Users</div>
-                {statsLoading ? (
-                  <Skeleton className="h-8 w-16" />
+                {statsLoading || statsError ? (
+                  <div className="flex items-center">
+                    <Skeleton className="h-8 w-16" />
+                    {statsError && <AlertCircle className="h-4 w-4 text-red-500 ml-2" />}
+                  </div>
                 ) : (
                   <div className="text-2xl font-bold text-gray-900" data-testid="stat-users">
                     {stats?.totalUsers || 0}
@@ -189,8 +334,11 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <div className="text-sm font-medium text-gray-500">Total Stores</div>
-                {statsLoading ? (
-                  <Skeleton className="h-8 w-16" />
+                {statsLoading || statsError ? (
+                  <div className="flex items-center">
+                    <Skeleton className="h-8 w-16" />
+                    {statsError && <AlertCircle className="h-4 w-4 text-red-500 ml-2" />}
+                  </div>
                 ) : (
                   <div className="text-2xl font-bold text-gray-900" data-testid="stat-stores">
                     {stats?.totalStores || 0}
@@ -209,8 +357,11 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <div className="text-sm font-medium text-gray-500">Total Ratings</div>
-                {statsLoading ? (
-                  <Skeleton className="h-8 w-16" />
+                {statsLoading || statsError ? (
+                  <div className="flex items-center">
+                    <Skeleton className="h-8 w-16" />
+                    {statsError && <AlertCircle className="h-4 w-4 text-red-500 ml-2" />}
+                  </div>
                 ) : (
                   <div className="text-2xl font-bold text-gray-900" data-testid="stat-ratings">
                     {stats?.totalRatings || 0}
@@ -241,8 +392,12 @@ export default function AdminDashboard() {
       {/* Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
-          <TabsTrigger value="stores" data-testid="tab-stores">Stores</TabsTrigger>
+          <TabsTrigger value="users" data-testid="tab-users">
+            Users ({users?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="stores" data-testid="tab-stores">
+            Stores ({filteredStores.length})
+          </TabsTrigger>
         </TabsList>
 
         {/* Users Tab */}
@@ -277,11 +432,28 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              {usersLoading ? (
+              {usersError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Users</h3>
+                  <p className="text-gray-600">Please try refreshing the page.</p>
+                </div>
+              ) : usersLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
                     <Skeleton key={i} className="h-16 w-full" />
                   ))}
+                </div>
+              ) : !users || users.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Users Found</h3>
+                  <p className="text-gray-600">
+                    {userSearch || userRoleFilter 
+                      ? "Try adjusting your search filters" 
+                      : "No users available"
+                    }
+                  </p>
                 </div>
               ) : (
                 <Table>
@@ -295,7 +467,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users?.map((user: any) => (
+                    {users.map((user) => (
                       <TableRow key={user.id} data-testid={`user-row-${user.id}`}>
                         <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
@@ -305,7 +477,7 @@ export default function AdminDashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => deleteUserMutation.mutate(user.id)}
+                            onClick={() => handleDeleteUser(user.id, user.name)}
                             disabled={deleteUserMutation.isPending}
                             data-testid={`button-delete-user-${user.id}`}
                           >
@@ -340,11 +512,28 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              {storesLoading ? (
+              {storesError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Stores</h3>
+                  <p className="text-gray-600">Please try refreshing the page.</p>
+                </div>
+              ) : storesLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
                     <Skeleton key={i} className="h-16 w-full" />
                   ))}
+                </div>
+              ) : filteredStores.length === 0 ? (
+                <div className="text-center py-8">
+                  <Store className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Stores Found</h3>
+                  <p className="text-gray-600">
+                    {storeSearch 
+                      ? "Try adjusting your search filters" 
+                      : "No stores available"
+                    }
+                  </p>
                 </div>
               ) : (
                 <Table>
@@ -358,7 +547,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredStores?.map((store: any) => (
+                    {filteredStores.map((store) => (
                       <TableRow key={store.id} data-testid={`store-row-${store.id}`}>
                         <TableCell className="font-medium">{store.name}</TableCell>
                         <TableCell>{store.owner.email}</TableCell>
@@ -370,7 +559,7 @@ export default function AdminDashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => deleteStoreMutation.mutate(store.id)}
+                            onClick={() => handleDeleteStore(store.id, store.name)}
                             disabled={deleteStoreMutation.isPending}
                             data-testid={`button-delete-store-${store.id}`}
                           >

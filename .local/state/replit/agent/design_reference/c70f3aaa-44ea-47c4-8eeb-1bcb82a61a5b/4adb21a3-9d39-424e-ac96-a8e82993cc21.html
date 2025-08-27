@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Rating Platform - Design Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#EFF6FF',
+                            100: '#DBEAFE',
+                            500: '#3B82F6',
+                            600: '#2563EB',
+                            700: '#1D4ED8',
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="font-inter bg-gray-50">
+
+    <!-- @COMPONENT: NavigationBar [role-based menu items] -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-gray-900">StoreRate</h1>
+                    </div>
+                    <div class="hidden md:ml-8 md:flex md:space-x-8" id="nav-links">
+                        <!-- Navigation items will be populated based on user role -->
+                        <a href="#" class="text-gray-900 hover:text-primary-600 px-3 py-2 text-sm font-medium" data-role="admin">Dashboard</a>
+                        <a href="#" class="text-gray-500 hover:text-primary-600 px-3 py-2 text-sm font-medium" data-role="admin">Users</a>
+                        <a href="#" class="text-gray-500 hover:text-primary-600 px-3 py-2 text-sm font-medium" data-role="admin">Stores</a>
+                        <a href="#" class="text-gray-900 hover:text-primary-600 px-3 py-2 text-sm font-medium" data-role="user">Browse Stores</a>
+                        <a href="#" class="text-gray-500 hover:text-primary-600 px-3 py-2 text-sm font-medium" data-role="user">My Profile</a>
+                        <a href="#" class="text-gray-900 hover:text-primary-600 px-3 py-2 text-sm font-medium" data-role="owner">My Store</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-700" data-bind="user.name">John Doe</span>
+                    <div class="relative">
+                        <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" id="user-menu-button">
+                            <span class="sr-only">Open user menu</span>
+                            <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                                <i class="fas fa-user text-primary-600 text-sm"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: NavigationBar -->
+
+    <!-- Main Content Container -->
+    <div class="min-h-screen">
+        
+        <!-- @COMPONENT: LoginPage [authentication form] -->
+        <div id="login-page" class="hidden min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-md w-full space-y-8">
+                <div>
+                    <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">Sign in to your account</h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Or
+                        <a href="#" class="font-medium text-primary-600 hover:text-primary-500" data-event="click:showSignup">
+                            create a new account
+                        </a>
+                    </p>
+                </div>
+                <form class="mt-8 space-y-6" data-event="submit:handleLogin">
+                    <div class="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label for="email" class="sr-only">Email address</label>
+                            <input id="email" name="email" type="email" required 
+                                   class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm" 
+                                   placeholder="Email address" data-validation="email">
+                        </div>
+                        <div>
+                            <label for="password" class="sr-only">Password</label>
+                            <input id="password" name="password" type="password" required 
+                                   class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm" 
+                                   placeholder="Password" data-validation="password">
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" data-implementation="Should validate credentials and redirect based on user role">
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: LoginPage -->
+
+        <!-- @COMPONENT: SignupPage [user registration form] -->
+        <div id="signup-page" class="hidden min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-md w-full space-y-8">
+                <div>
+                    <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">Create your account</h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Already have an account?
+                        <a href="#" class="font-medium text-primary-600 hover:text-primary-500" data-event="click:showLogin">
+                            Sign in here
+                        </a>
+                    </p>
+                </div>
+                <form class="mt-8 space-y-6" data-event="submit:handleSignup">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="signup-name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <input id="signup-name" name="name" type="text" required 
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
+                                   placeholder="Enter your full name (20-60 characters)" data-validation="name:20-60">
+                        </div>
+                        <div>
+                            <label for="signup-email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                            <input id="signup-email" name="email" type="email" required 
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
+                                   placeholder="Enter your email" data-validation="email">
+                        </div>
+                        <div>
+                            <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</label>
+                            <input id="signup-password" name="password" type="password" required 
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
+                                   placeholder="8-16 chars, 1 uppercase, 1 special char" data-validation="password:8-16,uppercase,special">
+                        </div>
+                        <div>
+                            <label for="signup-address" class="block text-sm font-medium text-gray-700">Address</label>
+                            <textarea id="signup-address" name="address" rows="3" required 
+                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
+                                      placeholder="Enter your address (max 400 characters)" data-validation="address:max-400"></textarea>
+                        </div>
+                        <div>
+                            <label for="signup-role" class="block text-sm font-medium text-gray-700">Account Type</label>
+                            <select id="signup-role" name="role" required 
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">Select account type</option>
+                                <option value="user">Regular User</option>
+                                <option value="store_owner">Store Owner</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" data-implementation="Should validate all fields and create user account">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: SignupPage -->
+
+        <!-- @COMPONENT: AdminDashboard [system administrator interface] -->
+        <div id="admin-dashboard" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Dashboard Header -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p class="mt-1 text-sm text-gray-600">Manage users, stores, and monitor platform activity</p>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-users text-primary-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Users</dt>
+                                    <dd class="text-2xl font-bold text-gray-900" data-bind="stats.totalUsers">1,247</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-store text-primary-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Stores</dt>
+                                    <dd class="text-2xl font-bold text-gray-900" data-bind="stats.totalStores">89</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-star text-primary-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Ratings</dt>
+                                    <dd class="text-2xl font-bold text-gray-900" data-bind="stats.totalRatings">3,456</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mb-6 flex flex-wrap gap-4">
+                <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" data-event="click:showAddUserModal">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add New User
+                </button>
+                <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" data-event="click:showAddStoreModal">
+                    <i class="fas fa-store mr-2"></i>
+                    Add New Store
+                </button>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8">
+                    <button class="tab-button border-primary-500 text-primary-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm" data-tab="users">
+                        Users
+                    </button>
+                    <button class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm" data-tab="stores">
+                        Stores
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Users Table -->
+            <div id="users-tab" class="tab-content">
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">All Users</h3>
+                            <div class="flex space-x-4">
+                                <input type="text" placeholder="Search users..." class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" data-event="input:filterUsers">
+                                <select class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" data-event="change:filterByRole">
+                                    <option value="">All Roles</option>
+                                    <option value="user">Regular User</option>
+                                    <option value="store_owner">Store Owner</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-event="click:sortBy" data-field="name">
+                                            Name <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-event="click:sortBy" data-field="email">
+                                            Email <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-event="click:sortBy" data-field="role">
+                                            Role <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- @MAP: users.map(user => ( -->
+                                    <tr class="hover:bg-gray-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900" data-bind="user.name">Sarah Johnson</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900" data-bind="user.email">sarah.johnson@email.com</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" data-bind="user.role">Regular User</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900 max-w-xs truncate" data-bind="user.address">123 Main Street, New York, NY 10001</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary-600 hover:text-primary-900 mr-3" data-event="click:viewUserDetails">View</button>
+                                            <button class="text-red-600 hover:text-red-900" data-event="click:deleteUser">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">Mike Chen</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">mike.chen@email.com</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Store Owner</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900 max-w-xs truncate">456 Oak Avenue, Los Angeles, CA 90210</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary-600 hover:text-primary-900 mr-3" data-event="click:viewUserDetails">View</button>
+                                            <button class="text-red-600 hover:text-red-900" data-event="click:deleteUser">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <!-- @END_MAP )) -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stores Table -->
+            <div id="stores-tab" class="tab-content hidden">
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">All Stores</h3>
+                            <input type="text" placeholder="Search stores..." class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" data-event="input:filterStores">
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Store Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- @MAP: stores.map(store => ( -->
+                                    <tr class="hover:bg-gray-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900" data-bind="store.name">Mike's Electronics</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900" data-bind="store.owner.email">mike.chen@email.com</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900 max-w-xs truncate" data-bind="store.address">456 Oak Avenue, Los Angeles, CA 90210</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex text-yellow-400 mr-2">
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="far fa-star"></i>
+                                                </div>
+                                                <span class="text-sm text-gray-900" data-bind="store.averageRating">4.2</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary-600 hover:text-primary-900 mr-3" data-event="click:viewStoreDetails">View</button>
+                                            <button class="text-red-600 hover:text-red-900" data-event="click:deleteStore">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <!-- @END_MAP )) -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: AdminDashboard -->
+
+        <!-- @COMPONENT: UserDashboard [regular user interface] -->
+        <div id="user-dashboard" class="hidden max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Dashboard Header -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">Browse Stores</h1>
+                <p class="mt-1 text-sm text-gray-600">Discover and rate local stores</p>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="store-search" class="block text-sm font-medium text-gray-700">Search Stores</label>
+                        <input type="text" id="store-search" placeholder="Search by name..." class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" data-event="input:searchStores">
+                    </div>
+                    <div>
+                        <label for="address-search" class="block text-sm font-medium text-gray-700">Search Address</label>
+                        <input type="text" id="address-search" placeholder="Search by address..." class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" data-event="input:searchByAddress">
+                    </div>
+                    <div class="flex items-end">
+                        <button class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" data-event="click:clearFilters">
+                            <i class="fas fa-search mr-2"></i>
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stores Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- @MAP: stores.map(store => ( -->
+                <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200" data-mock="true">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900" data-bind="store.name">Mike's Electronics</h3>
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400 text-sm mr-1">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                                <span class="text-sm text-gray-600" data-bind="store.averageRating">4.2</span>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 mb-4" data-bind="store.address">456 Oak Avenue, Los Angeles, CA 90210</p>
+                        
+                        <div class="border-t pt-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-medium text-gray-700">Your Rating:</span>
+                                <div class="flex text-yellow-400 text-sm" data-bind="userRating.stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <button class="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-xs font-medium rounded text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" data-event="click:rateStore" data-implementation="Show rating modal">
+                                    <i class="fas fa-star mr-1"></i>
+                                    Rate
+                                </button>
+                                <button class="flex-1 inline-flex justify-center items-center px-3 py-2 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" data-event="click:editRating">
+                                    <i class="fas fa-edit mr-1"></i>
+                                    Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200" data-mock="true">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Sarah's Bakery</h3>
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400 text-sm mr-1">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="text-sm text-gray-600">4.8</span>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 mb-4">789 Bakery Lane, Chicago, IL 60601</p>
+                        
+                        <div class="border-t pt-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-medium text-gray-700">Your Rating:</span>
+                                <span class="text-sm text-gray-500">Not rated yet</span>
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <button class="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-xs font-medium rounded text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" data-event="click:rateStore">
+                                    <i class="fas fa-star mr-1"></i>
+                                    Rate
+                                </button>
+                                <button class="flex-1 inline-flex justify-center items-center px-3 py-2 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-gray-100 cursor-not-allowed" disabled>
+                                    <i class="fas fa-edit mr-1"></i>
+                                    Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+        <!-- @END_COMPONENT: UserDashboard -->
+
+        <!-- @COMPONENT: StoreOwnerDashboard [store owner interface] -->
+        <div id="owner-dashboard" class="hidden max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Dashboard Header -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">My Store Dashboard</h1>
+                <p class="mt-1 text-sm text-gray-600">Monitor your store's ratings and customer feedback</p>
+            </div>
+
+            <!-- Store Overview -->
+            <div class="bg-white shadow rounded-lg mb-6">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900" data-bind="store.name">Mike's Electronics</h2>
+                            <p class="text-sm text-gray-600" data-bind="store.address">456 Oak Avenue, Los Angeles, CA 90210</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center justify-end mb-2">
+                                <div class="flex text-yellow-400 text-lg mr-2">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                                <span class="text-2xl font-bold text-gray-900" data-bind="store.averageRating">4.2</span>
+                            </div>
+                            <p class="text-sm text-gray-600" data-bind="store.totalRatings">Based on 47 ratings</p>
+                        </div>
+                    </div>
+
+                    <!-- Rating Distribution -->
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="text-center">
+                            <div class="text-lg font-semibold text-gray-900" data-bind="ratings.fiveStars">23</div>
+                            <div class="flex text-yellow-400 text-sm justify-center mb-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="text-xs text-gray-500">5 Stars</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-semibold text-gray-900" data-bind="ratings.fourStars">18</div>
+                            <div class="flex text-yellow-400 text-sm justify-center mb-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <div class="text-xs text-gray-500">4 Stars</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-semibold text-gray-900" data-bind="ratings.threeStars">4</div>
+                            <div class="flex text-yellow-400 text-sm justify-center mb-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <div class="text-xs text-gray-500">3 Stars</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-semibold text-gray-900" data-bind="ratings.twoStars">2</div>
+                            <div class="flex text-yellow-400 text-sm justify-center mb-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <div class="text-xs text-gray-500">2 Stars</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-semibold text-gray-900" data-bind="ratings.oneStars">0</div>
+                            <div class="flex text-yellow-400 text-sm justify-center mb-1">
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <div class="text-xs text-gray-500">1 Star</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Ratings -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Ratings</h3>
+                    
+                    <div class="space-y-4">
+                        <!-- @MAP: userRatings.map(rating => ( -->
+                        <div class="border border-gray-200 rounded-lg p-4" data-mock="true">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center mr-3">
+                                        <i class="fas fa-user text-gray-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900" data-bind="rating.user.name">Sarah Johnson</div>
+                                        <div class="text-xs text-gray-500" data-bind="rating.user.email">sarah.johnson@email.com</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="flex text-yellow-400 text-sm mr-2">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <span class="text-sm text-gray-600" data-bind="rating.created_at">2 days ago</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4" data-mock="true">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center mr-3">
+                                        <i class="fas fa-user text-gray-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">John Davis</div>
+                                        <div class="text-xs text-gray-500">john.davis@email.com</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="flex text-yellow-400 text-sm mr-2">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="far fa-star"></i>
+                                    </div>
+                                    <span class="text-sm text-gray-600">1 week ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: StoreOwnerDashboard -->
+
+        <!-- @COMPONENT: RatingModal [star rating interface] -->
+        <div id="rating-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" data-event="click:closeModalOnBackdrop">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Rate Store</h3>
+                        <button class="text-gray-400 hover:text-gray-600" data-event="click:closeRatingModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2" data-bind="selectedStore.name">Mike's Electronics</h4>
+                        <p class="text-xs text-gray-500" data-bind="selectedStore.address">456 Oak Avenue, Los Angeles, CA 90210</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Your Rating</label>
+                        <div class="flex justify-center space-x-1">
+                            <button class="star-rating text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none transition-colors" data-rating="1" data-event="click:selectRating">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <button class="star-rating text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none transition-colors" data-rating="2" data-event="click:selectRating">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <button class="star-rating text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none transition-colors" data-rating="3" data-event="click:selectRating">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <button class="star-rating text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none transition-colors" data-rating="4" data-event="click:selectRating">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <button class="star-rating text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none transition-colors" data-rating="5" data-event="click:selectRating">
+                                <i class="fas fa-star"></i>
+                            </button>
+                        </div>
+                        <p class="text-center text-sm text-gray-600 mt-2" id="rating-text">Click to rate</p>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500" data-event="click:closeRatingModal">
+                            Cancel
+                        </button>
+                        <button class="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500" data-event="click:submitRating" data-implementation="Should validate rating selection and submit to API">
+                            Submit Rating
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: RatingModal -->
+
+    </div>
+
+    <script>
+        // TODO: Implement React Router navigation, state management, and API calls
+        
+        (function() {
+            // Demo functionality for tabs
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabName = button.dataset.tab;
+                    
+                    // Update active tab button
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('border-primary-500', 'text-primary-600');
+                        btn.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    button.classList.remove('border-transparent', 'text-gray-500');
+                    button.classList.add('border-primary-500', 'text-primary-600');
+                    
+                    // Show corresponding tab content
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+                });
+            });
+
+            // Demo functionality for rating modal
+            const ratingButtons = document.querySelectorAll('[data-event="click:rateStore"]');
+            const ratingModal = document.getElementById('rating-modal');
+            const starRatingButtons = document.querySelectorAll('.star-rating');
+            const ratingText = document.getElementById('rating-text');
+            let selectedRating = 0;
+
+            ratingButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    ratingModal.classList.remove('hidden');
+                });
+            });
+
+            // Close modal functionality
+            document.querySelectorAll('[data-event="click:closeRatingModal"]').forEach(button => {
+                button.addEventListener('click', () => {
+                    ratingModal.classList.add('hidden');
+                    resetRatingModal();
+                });
+            });
+
+            // Star rating functionality
+            starRatingButtons.forEach((button, index) => {
+                button.addEventListener('click', () => {
+                    selectedRating = parseInt(button.dataset.rating);
+                    updateStarDisplay(selectedRating);
+                    updateRatingText(selectedRating);
+                });
+
+                button.addEventListener('mouseenter', () => {
+                    const hoverRating = parseInt(button.dataset.rating);
+                    updateStarDisplay(hoverRating);
+                });
+            });
+
+            // Reset stars on mouse leave
+            document.querySelector('.flex.justify-center.space-x-1').addEventListener('mouseleave', () => {
+                updateStarDisplay(selectedRating);
+            });
+
+            function updateStarDisplay(rating) {
+                starRatingButtons.forEach((button, index) => {
+                    if (index < rating) {
+                        button.classList.remove('text-gray-300');
+                        button.classList.add('text-yellow-400');
+                    } else {
+                        button.classList.remove('text-yellow-400');
+                        button.classList.add('text-gray-300');
+                    }
+                });
+            }
+
+            function updateRatingText(rating) {
+                const texts = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+                ratingText.textContent = texts[rating] || 'Click to rate';
+            }
+
+            function resetRatingModal() {
+                selectedRating = 0;
+                updateStarDisplay(0);
+                ratingText.textContent = 'Click to rate';
+            }
+
+            // Demo navigation between different dashboards
+            // In a real app, this would be handled by React Router
+            const dashboards = ['login-page', 'signup-page', 'admin-dashboard', 'user-dashboard', 'owner-dashboard'];
+            
+            function showDashboard(dashboardId) {
+                dashboards.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.classList.add('hidden');
+                    }
+                });
+                
+                const targetDashboard = document.getElementById(dashboardId);
+                if (targetDashboard) {
+                    targetDashboard.classList.remove('hidden');
+                }
+            }
+
+            // Show admin dashboard by default for demo
+            showDashboard('admin-dashboard');
+
+            // Add keyboard navigation for accessibility
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !ratingModal.classList.contains('hidden')) {
+                    ratingModal.classList.add('hidden');
+                    resetRatingModal();
+                }
+            });
+
+        })();
+    </script>
+</body>
+</html>

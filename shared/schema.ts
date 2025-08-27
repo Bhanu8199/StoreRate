@@ -143,3 +143,7 @@ export type StoreWithRatings = Store & {
   ratings: RatingWithUser[];
   averageRating?: number;
 };
+
+export type RatingWithStore = Rating & {
+  store: Store;
+};

@@ -53,23 +53,55 @@ export default function Signup() {
   const onSubmit = async (data: SignupFormData) => {
     try {
       setIsLoading(true);
-      const response = await signup(data);
+      console.log("Attempting signup with:", { 
+        email: data.email, 
+        role: data.role,
+        storeName: data.storeName 
+      });
       
+      const response = await signup(data);
+      console.log("Signup response:", response);
+      
+      // Check if response contains user data
+      if (!response || !response.user) {
+        throw new Error("Invalid signup response - no user data received");
+      }
+
+      const { user } = response;
+
+      if (!user.role) {
+        throw new Error("Invalid signup response - no user role found");
+      }
+
+      // Show success message
       toast({
         title: "Success",
-        description: "Account created successfully",
+        description: `Welcome to the platform, ${user.name || user.email}!`,
       });
 
-      // Redirect based on role
-      if (response.user.role === 'store_owner') {
+      console.log("User role after signup:", user.role);
+
+      // Immediate redirect based on role - no timeout
+      if (user.role === 'admin') {
+        console.log("Redirecting to admin dashboard");
+        setLocation('/admin');
+      } else if (user.role === 'store_owner') {
+        console.log("Redirecting to owner dashboard");
         setLocation('/owner');
+      } else if (user.role === 'user') {
+        console.log("Redirecting to stores page");
+        setLocation('/stores');
       } else {
+        console.warn("Unknown user role:", user.role);
+        // Default fallback
         setLocation('/stores');
       }
+
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to create account. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -101,9 +133,10 @@ export default function Signup() {
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your full name (20-60 characters)"
+                        placeholder="Enter your full name (5-30 characters)"
                         {...field}
                         data-testid="input-name"
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -123,6 +156,7 @@ export default function Signup() {
                         placeholder="Enter your email"
                         {...field}
                         data-testid="input-email"
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -142,6 +176,7 @@ export default function Signup() {
                         placeholder="8-16 chars, 1 uppercase, 1 special char"
                         {...field}
                         data-testid="input-password"
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -161,6 +196,7 @@ export default function Signup() {
                         rows={3}
                         {...field}
                         data-testid="input-address"
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -174,7 +210,11 @@ export default function Signup() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Account Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      disabled={isLoading}
+                    >
                       <FormControl>
                         <SelectTrigger data-testid="select-role">
                           <SelectValue placeholder="Select account type" />
@@ -202,6 +242,7 @@ export default function Signup() {
                           placeholder="Enter your store name"
                           {...field}
                           data-testid="input-store-name"
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />

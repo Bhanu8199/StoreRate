@@ -1,10 +1,12 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { authenticatedApiRequest } from "@/lib/auth";
+import { authenticatedApiRequest, getCurrentUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Star, User, MapPin } from "lucide-react";
+import { Star, User, MapPin, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface StoreRating {
   id: string;
@@ -26,14 +28,54 @@ interface StoreWithRatings {
 }
 
 export default function OwnerDashboard() {
+  const { toast } = useToast();
+
+  // Debug authentication
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    console.log("Owner Dashboard - Current User:", currentUser);
+    if (!currentUser || currentUser.role !== 'store_owner') {
+      console.warn("Owner dashboard accessed by non-store-owner or unauthenticated user");
+    }
+  }, []);
+
   // Fetch store with ratings
-  const { data: store, isLoading } = useQuery<StoreWithRatings>({
+  const { data: store, isLoading, error } = useQuery<StoreWithRatings>({
     queryKey: ['/api/stores/my-store'],
     queryFn: async () => {
-      const res = await authenticatedApiRequest('GET', '/api/stores/my-store');
-      return res.json();
+      try {
+        console.log("Fetching store data for owner");
+        const res = await authenticatedApiRequest('GET', '/api/stores/my-store');
+        
+        if (!res.ok) {
+          if (res.status === 404) {
+            throw new Error("Store not found. Please contact an administrator to set up your store.");
+          }
+          throw new Error(`Failed to fetch store: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        console.log("Store data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching store:", error);
+        throw error;
+      }
     },
+    retry: 2,
+    retryDelay: 1000,
   });
+
+  // Handle query error
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load store data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   const renderStars = (rating: number, size: "sm" | "lg" = "sm") => {
     const starSize = size === "lg" ? "h-5 w-5" : "h-4 w-4";
@@ -86,13 +128,19 @@ export default function OwnerDashboard() {
     );
   }
 
-  if (!store) {
+  if (error || !store) {
     return (
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <Card>
           <CardContent className="p-12 text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Store Not Found</h2>
-            <p className="text-gray-600">Please contact an administrator to set up your store.</p>
+            <p className="text-gray-600 mb-4">
+              {error?.message || "Please contact an administrator to set up your store."}
+            </p>
+            <p className="text-sm text-gray-500">
+              If you believe this is an error, please refresh the page or contact support.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -124,9 +172,9 @@ export default function OwnerDashboard() {
             </div>
             <div className="text-right">
               <div className="flex items-center justify-end mb-2">
-                {renderStars(Math.round(store.averageRating), "lg")}
+                {renderStars(Math.round(store.averageRating || 0), "lg")}
                 <span className="text-2xl font-bold text-gray-900 ml-3" data-testid="average-rating">
-                  {store.averageRating.toFixed(1)}
+                  {store.averageRating ? store.averageRating.toFixed(1) : '0.0'}
                 </span>
               </div>
               <p className="text-sm text-gray-600" data-testid="total-ratings">
@@ -170,36 +218,38 @@ export default function OwnerDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {store.ratings.map((rating) => (
-                <div 
-                  key={rating.id} 
-                  className="border border-gray-200 rounded-lg p-4"
-                  data-testid={`rating-${rating.id}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
-                        <User className="h-5 w-5 text-gray-600" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {rating.user.name}
+              {store.ratings
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map((rating) => (
+                  <div 
+                    key={rating.id} 
+                    className="border border-gray-200 rounded-lg p-4"
+                    data-testid={`rating-${rating.id}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+                          <User className="h-5 w-5 text-gray-600" />
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {rating.user.email}
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {rating.user.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {rating.user.email}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      {getRatingBadge(rating.ratingValue)}
-                      {renderStars(rating.ratingValue)}
-                      <span className="text-sm text-gray-600">
-                        {formatDistanceToNow(new Date(rating.createdAt), { addSuffix: true })}
-                      </span>
+                      <div className="flex items-center space-x-3">
+                        {getRatingBadge(rating.ratingValue)}
+                        {renderStars(rating.ratingValue)}
+                        <span className="text-sm text-gray-600">
+                          {formatDistanceToNow(new Date(rating.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </CardContent>
